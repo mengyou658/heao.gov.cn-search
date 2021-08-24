@@ -2,7 +2,7 @@
 // @name         河南省2021年普通高等学校招生考试成绩查询（含对口生和专升本） 油猴脚本
 // @namespace    https://github.com/mengyou658/heao.gov.cn-search
 // @version      1.0.0
-// @description  河南省2021年普通高等学校招生考试成绩查询（含对口生和专升本） 油猴脚本
+// @description  查询河南省2021年普通高等学校招生考试成绩查询（含对口生和专升本） 油猴脚本
 // @author       yunchaoq/mengyou658
 // @license      GPL License
 // @match        *://*.heao.gov.cn/*
