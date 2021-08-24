@@ -43,11 +43,20 @@
 
   function showModal() {
     $('#InputCheck').prop('autocomplete', 'off')
+    $('#QueryBtn').val('查询（CTRL+SHIFT+Q）')
+    $("body").keydown(function (e) {
+      if (e.ctrlKey && e.shiftKey && e.keyCode == 32)
+      {
+        toNext()
+      } else if (e.ctrlKey && e.shiftKey && e.keyCode == 81) {
+        $('#QueryBtn').click()
+      }
+    });
     var tmp = getInitData()
     var data = tmp.data
     var dataState = tmp.dataState
     layer.confirm('当前查询数据: ' + (data && dataState && dataState.index < data.length ? data[dataState.index]['姓名'] : ''), {
-      btn: ['从头开始', '上一个', '下一个', '继续当前', '保存当前', '下载结果'] //可以无限个按钮
+      btn: ['从头开始', '上一个', '下一个(CTRL+SHIFT+空格)', '继续当前', '保存当前', '下载结果'] //可以无限个按钮
           ,closeBtn: 0, shade: 0, offset: 'rt'
       ,btn1: function(index1, layero){
         //从头开始
@@ -68,56 +77,14 @@
         showModal()
       },btn2: function(index1, layero){
         //上一个
-        var tmp = getInitData()
-        var data = tmp.data
-        var dataState = tmp.dataState
-        if (!data || !data.length) {
-          showMsg('等待获取数据，请设置localStorage.setItem("tmpSearchCsvData",[{"考生号":"xxx","报名序号":"xxx","班级":"xxx","姓名":"xxxx","语文":"","数学":"","外语":"","综合":"","总分":"0"},])')
-          return;
-        }
-        saveData()
-        if (dataState && dataState.index <= 1) {
-          showMsg("当前是第一个数据")
-          return;
-        }
-        dataState.index -= 1
-        localStorage.setItem("tmpSearchCsvDataState", JSON.stringify(dataState));
-        startSearch(data[dataState.index])
-        showModal()
+        toPrev()
       },btn3: function(index1, layero){
         //下一个
-        var tmp = getInitData()
-        var data = tmp.data
-        var dataState = tmp.dataState
-        if (!data || !data.length) {
-          showMsg('等待获取数据，请设置localStorage.setItem("tmpSearchCsvData",[{"考生号":"xxx","报名序号":"xxx","班级":"xxx","姓名":"xxxx","语文":"","数学":"","外语":"","综合":"","总分":"0"},])')
-          return;
-        }
-        saveData()
-        if (dataState && dataState.index >= data.length - 1) {
-          showMsg("当前是最后一个数据，")
-          return;
-        }
-        dataState.index += 1
-        localStorage.setItem("tmpSearchCsvDataState", JSON.stringify(dataState));
-        startSearch(data[dataState.index])
-        showModal()
+        toNext()
       }
       ,btn4: function(index1, layero){
         //继续当前
-        var tmp = getInitData()
-        var data = tmp.data
-        var dataState = tmp.dataState
-        if (!data || !data.length) {
-          showMsg('等待获取数据，请设置localStorage.setItem("tmpSearchCsvData",[{"考生号":"xxx","报名序号":"xxx","班级":"xxx","姓名":"xxxx","语文":"","数学":"","外语":"","综合":"","总分":"0"},])')
-          return;
-        }
-        if (dataState && dataState.index > data.length - 1) {
-          showMsg("当前是最后一个数据")
-          return;
-        }
-        startSearch(data[dataState.index])
-        showModal()
+        toCurrent()
       }
       ,btn5: function(index1, layero){
         //保存当前
@@ -132,6 +99,60 @@
     })
   }
 
+  function toCurrent() {
+    var tmp = getInitData()
+    var data = tmp.data
+    var dataState = tmp.dataState
+    if (!data || !data.length) {
+      showMsg('等待获取数据，请设置localStorage.setItem("tmpSearchCsvData",[{"考生号":"xxx","报名序号":"xxx","班级":"xxx","姓名":"xxxx","语文":"","数学":"","外语":"","综合":"","总分":"0"},])')
+      return;
+    }
+    if (dataState && dataState.index > data.length - 1) {
+      showMsg("当前是最后一个数据")
+      return;
+    }
+    startSearch(data[dataState.index])
+    showModal()
+  }
+
+  function toNext() {
+    var tmp = getInitData()
+    var data = tmp.data
+    var dataState = tmp.dataState
+    if (!data || !data.length) {
+      showMsg('等待获取数据，请设置localStorage.setItem("tmpSearchCsvData",[{"考生号":"xxx","报名序号":"xxx","班级":"xxx","姓名":"xxxx","语文":"","数学":"","外语":"","综合":"","总分":"0"},])')
+      return;
+    }
+    saveData()
+    if (dataState && dataState.index >= data.length - 1) {
+      showMsg("当前是最后一个数据，")
+      return;
+    }
+    dataState.index += 1
+    localStorage.setItem("tmpSearchCsvDataState", JSON.stringify(dataState));
+    startSearch(data[dataState.index])
+    showModal()
+  }
+
+  function toPrev() {
+    var tmp = getInitData()
+    var data = tmp.data
+    var dataState = tmp.dataState
+    if (!data || !data.length) {
+      showMsg('等待获取数据，请设置localStorage.setItem("tmpSearchCsvData",[{"考生号":"xxx","报名序号":"xxx","班级":"xxx","姓名":"xxxx","语文":"","数学":"","外语":"","综合":"","总分":"0"},])')
+      return;
+    }
+    saveData()
+    if (dataState && dataState.index <= 1) {
+      showMsg("当前是第一个数据")
+      return;
+    }
+    dataState.index -= 1
+    localStorage.setItem("tmpSearchCsvDataState", JSON.stringify(dataState));
+    startSearch(data[dataState.index])
+    showModal()
+  }
+
   function saveData() {
     var tabInfo = $('#tabInfo')
     if (tabInfo && tabInfo.length) {
@@ -139,17 +160,23 @@
       tabInfo.find('td:odd').each(function () {
         res.push($(this).text())
       });
-
       var tmp = getInitData()
       var data = tmp.data
       var dataState = tmp.dataState
       if (data && dataState && dataState.index < data.length) {
-        data[dataState.index].scores = res
+        let datum = data[dataState.index];
+        if (datum['姓名'] != res[1]) {
+          showMsg("保存失败，当前查询数据不对应")
+          return false
+        }
+        datum.scores = res;
         localStorage.setItem("tmpSearchCsvData", JSON.stringify(data));
         showMsg("保存成功")
+        return true
       }
     } else {
       showMsg("当前没有查询到数据，无法保存")
+      return false
     }
   }
 
@@ -189,6 +216,7 @@
     $('#sfzh').val(item['报名序号']);
     $('#sfzh').prop('autocomplete', 'off')
     $('#CheckPic').click();
+    $('#InputCheck').focus();
   }
 
   function download() {
